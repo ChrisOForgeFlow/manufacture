@@ -1,9 +1,22 @@
+from unittest.mock import patch
+
 from odoo.tests import Form
 
 from odoo.addons.mrp.tests.common import TestMrpCommon
 
 
 class TestMrpOrder(TestMrpCommon):
+    @classmethod
+    def setUpClass(cls):
+        def _check_multiwarehouse_group(*args, **kwargs):
+            pass
+
+        with patch(
+            "odoo.addons.stock.models.stock_warehouse.Warehouse._check_multiwarehouse_group",
+            new=_check_multiwarehouse_group,
+        ):
+            super(TestMrpCommon, cls).setUpClass()
+
     def setUp(self):
         super(TestMrpOrder, self).setUp()
         self.stock_location = self.env.ref("stock.stock_location_stock")
@@ -22,8 +35,7 @@ class TestMrpOrder(TestMrpCommon):
             {
                 "name": "Test Account",
                 "code": "TestAccount1",
-                "user_type_id": self.env.ref("account.data_account_type_payable").id,
-                "reconcile": True,
+                "account_type": "liability_payable",
             }
         )
         location = self.env["stock.location"].search([("usage", "=", "production")])
@@ -79,6 +91,17 @@ class TestMrpOrder(TestMrpCommon):
 
 
 class TestUnbuild(TestMrpCommon):
+    @classmethod
+    def setUpClass(cls):
+        def _check_multiwarehouse_group(*args, **kwargs):
+            pass
+
+        with patch(
+            "odoo.addons.stock.models.stock_warehouse.Warehouse._check_multiwarehouse_group",
+            new=_check_multiwarehouse_group,
+        ):
+            super(TestMrpCommon, cls).setUpClass()
+
     def setUp(self):
         super(TestUnbuild, self).setUp()
         self.stock_location = self.env.ref("stock.stock_location_stock")
@@ -96,8 +119,7 @@ class TestUnbuild(TestMrpCommon):
             {
                 "name": "Test Account",
                 "code": "TestAccount2",
-                "user_type_id": self.env.ref("account.data_account_type_payable").id,
-                "reconcile": True,
+                "account_type": "liability_payable",
             }
         )
         location = self.env["stock.location"].search([("usage", "=", "production")])
@@ -124,7 +146,15 @@ class TestUnbuild(TestMrpCommon):
         mo_form.qty_producing = 5.0
         mo = mo_form.save()
         mo.button_mark_done()
-        journal_items_before_unbuild = self.env["account.move.line"].search([]).ids
+        journal_items_before_unbuild = (
+            self.env["account.move.line"]
+            .search(
+                [
+                    ("mrp_production_id", "=", mo.id),
+                ]
+            )
+            .ids
+        )
 
         x = Form(self.env["mrp.unbuild"])
         x.product_id = p_final
@@ -132,7 +162,17 @@ class TestUnbuild(TestMrpCommon):
         x.product_qty = 5
         unbuild = x.save()
         unbuild.action_unbuild()
-        journal_items_after_unbuild = self.env["account.move.line"].search([]).ids
+        journal_items_after_unbuild = (
+            self.env["account.move.line"]
+            .search(
+                [
+                    "|",
+                    ("mrp_production_id", "=", mo.id),
+                    ("unbuild_id", "=", unbuild.id),
+                ]
+            )
+            .ids
+        )
 
         result = unbuild.view_journal_items()
         domain = result["domain"]
