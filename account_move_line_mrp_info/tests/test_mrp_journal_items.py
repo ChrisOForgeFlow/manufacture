@@ -1,8 +1,11 @@
+import logging
 from unittest.mock import patch
 
 from odoo.tests import Form
 
 from odoo.addons.mrp.tests.common import TestMrpCommon
+
+_logger = logging.getLogger(__name__)
 
 
 class TestMrpOrder(TestMrpCommon):
@@ -181,7 +184,21 @@ class TestUnbuild(TestMrpCommon):
             set(journal_items_after_unbuild) - set(journal_items_before_unbuild)
         )
         unbuild_journal_items.sort()
+        _logger.info(
+            " / ".join(
+                self.env["account.move.line"]
+                .browse(journal_items_after_unbuild)
+                .mapped("display_name")
+            )
+        )
         difference_journal_items.sort()
+        _logger.info(
+            " / ".join(
+                self.env["account.move.line"]
+                .browse(difference_journal_items)
+                .mapped("display_name")
+            )
+        )
 
         self.assertTrue(
             difference_journal_items,
