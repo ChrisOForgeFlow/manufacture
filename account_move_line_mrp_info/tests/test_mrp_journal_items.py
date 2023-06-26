@@ -57,8 +57,12 @@ class TestMrpOrder(TestMrpCommon):
         p2.standard_price = 5
         p_final.categ_id = pc.id
 
-        self.env["stock.quant"]._update_available_quantity(p1, self.stock_location, 100)
-        self.env["stock.quant"]._update_available_quantity(p2, self.stock_location, 5)
+        self.env["stock.quant"]._update_available_quantity(
+            p1, self.stock_location, 1000
+        )
+        self.env["stock.quant"]._update_available_quantity(
+            p2, self.stock_location, 1000
+        )
         mo.action_assign()
 
         mo_form = Form(mo)
@@ -141,8 +145,12 @@ class TestUnbuild(TestMrpCommon):
         p2.standard_price = 5
         p_final.categ_id = pc.id
 
-        self.env["stock.quant"]._update_available_quantity(p1, self.stock_location, 100)
-        self.env["stock.quant"]._update_available_quantity(p2, self.stock_location, 5)
+        self.env["stock.quant"]._update_available_quantity(
+            p1, self.stock_location, 1000
+        )
+        self.env["stock.quant"]._update_available_quantity(
+            p2, self.stock_location, 1000
+        )
         mo.action_assign()
 
         mo_form = Form(mo)
